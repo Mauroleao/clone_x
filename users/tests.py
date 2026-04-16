@@ -1,3 +1,6 @@
+import io
+from PIL import Image
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APITestCase
 from rest_framework import status
 from django.contrib.auth import get_user_model
@@ -104,3 +107,29 @@ class UserProfileUpdateTests(APITestCase):
         
         self.user.refresh_from_db()
         self.assertEqual(self.user.first_name, 'Nome Novo Atualizado')        
+        
+    def test_update_profile_photo(self):
+        """
+        Testa se o usuário consegue enviar e salvar uma foto de perfil.
+        """
+        
+        image_file = io.BytesIO()
+        image = Image.new('RGB', (100, 100), color='red')
+        image.save(image_file, 'jpeg')
+        image_file.seek(0)
+        
+    
+        photo_upload = SimpleUploadedFile(
+            "foto_teste.jpg", 
+            image_file.read(), 
+            content_type="image/jpeg"
+        )
+        
+        data = {'photo': photo_upload}
+        response = self.client.patch(self.profile_url, data, format='multipart')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        self.user.refresh_from_db()
+        
+        self.assertTrue(self.user.profile.photo.name.startswith('profile_photos/foto_teste'))        
