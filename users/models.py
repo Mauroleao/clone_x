@@ -6,8 +6,14 @@ from django.dispatch import receiver
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    
     photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
+    
+    follows = models.ManyToManyField(
+        'self',
+        related_name='followed_by',  
+        symmetrical=False, 
+        blank=True
+    )
     
     def __str__(self):
         return f"Perfil de {self.user.username}"

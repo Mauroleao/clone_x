@@ -132,4 +132,37 @@ class UserProfileUpdateTests(APITestCase):
         
         self.user.refresh_from_db()
         
-        self.assertTrue(self.user.profile.photo.name.startswith('profile_photos/foto_teste'))        
+        self.assertTrue(self.user.profile.photo.name.startswith('profile_photos/foto_teste')) 
+        
+        
+class UserFollowTests(APITestCase):
+    def setUp(self):
+        User = get_user_model()
+        
+        # 1. Criamos o usuário que vai seguir (O João)
+        self.user_joao = User.objects.create_user(username='joao', password='123')
+        
+        # 2. Criamos a usuária que será seguida (A Maria)
+        self.user_maria = User.objects.create_user(username='maria', password='123')
+        
+        # 3. Colocamos o crachá no João (Ele está logado fazendo a requisição)
+        self.client.force_authenticate(user=self.user_joao)
+
+    def test_follow_user(self):
+        """
+        Testa se o João consegue seguir a Maria batendo na rota de follow.
+        """
+        # A URL aponta para o ID da Maria
+        url = f'/api/users/{self.user_maria.id}/follow/'
+        
+        # Como é uma ação que altera o banco de dados, usamos POST
+        response = self.client.post(url)
+        
+        # 1. A API deve retornar 200 OK
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # 2. Verificamos no banco de dados se o João agora segue a Maria
+        self.user_joao.profile.refresh_from_db()
+        self.assertTrue(
+            self.user_joao.profile.follows.filter(id=self.user_maria.profile.id).exists()
+        )               
