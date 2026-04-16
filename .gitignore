@@ -55,6 +55,14 @@ db.sqlite3-journal
 .pytest_cache/
 htmlcov/
 
+# Frontend (Node.js/NPM/Vite)
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-error.log*
+
 # OS
 Thumbs.db
 .DS_Store
