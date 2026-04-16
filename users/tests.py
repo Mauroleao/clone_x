@@ -32,20 +32,75 @@ class UserRegistrationTests(APITestCase):
         """
         User = get_user_model()
         
-        # 1. Primeiro, criamos um usuário direto no banco de dados
+        
         User.objects.create_user(username='clone', email='original@email.com', password='123')
         
-        # 2. Agora, tentamos usar a API para criar outro com o mesmo username
+        
         url = '/api/users/register/'
         data = {
-            'username': 'clone', # Username repetido!
+            'username': 'clone', 
             'email': 'impostor@email.com',
             'password': 'senhaforte'
         }
         response = self.client.post(url, data)
         
-        # 3. A API DEVE negar o cadastro (Status 400)
+        
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         
-        # 4. Garantimos que o banco de dados continua tendo apenas 1 usuário
-        self.assertEqual(User.objects.count(), 1)    
+        
+        self.assertEqual(User.objects.count(), 1)  
+        
+class UserLoginTest(APITestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='usuario_teste',
+            password='senha_super_secreta'
+        )
+        self.login_url = '/api/users/login/'
+    def test_login_success(self):
+        data = {
+            'username': 'usuario_teste',
+            'password': 'senha_super_secreta'
+        }           
+        
+        response = self.client.post(self.login_url, data)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        self.assertIn('access', response.data)
+        self.assertIn('refresh', response.data)
+        
+        
+class UserProfileUpdateTests(APITestCase):
+    def setUp(self):
+        User = get_user_model()
+        
+        self.user = User.objects.create_user(
+            username='usuario_perfil',
+            password='senha_secreta',
+            first_name='Nome Antigo'
+        )
+        self.profile_url = '/api/users/profile/'
+
+
+        self.client.force_authenticate(user=self.user)
+
+    def test_update_profile_name(self):
+        """
+        Testa se o usuário consegue alterar apenas o seu nome (Atualização Parcial/PATCH).
+        """
+        data = {
+            'first_name': 'Nome Novo Atualizado'
+            
+        }
+        
+        
+        response = self.client.patch(self.profile_url, data)
+        
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, 'Nome Novo Atualizado')        
