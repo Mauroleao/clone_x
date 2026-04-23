@@ -1,0 +1,14 @@
+backend/
+posts/
+users/
+pyproject.toml
+poetry.lock
+requirements.txt
+manage.py
+db.sqlite3
+media/
+Procfile
+runserver.bat
+runserver.ps1
+start.sh
+test_playwright.py

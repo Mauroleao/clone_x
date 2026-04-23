@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  # Backend Django
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clone_x_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=django-insecure-your-secret-key-change-in-production
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+      - DATABASE_URL=sqlite:///db.sqlite3
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn backend.wsgi:application --bind 0.0.0.0:8000 --workers 4 --reload"
+    networks:
+      - clone_x_network
+
+  # Frontend (opcional - apenas para desenvolvimento)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: clone_x_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev
+    depends_on:
+      - backend
+    networks:
+      - clone_x_network
+
+volumes:
+  static_volume:
+  media_volume:
+
+networks:
+  clone_x_network:
+    driver: bridge

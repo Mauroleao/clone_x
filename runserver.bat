@@ -1,0 +1,3 @@
+@echo off
+echo Starting server...
+poetry run python manage.py runserver
